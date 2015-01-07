@@ -1,0 +1,10 @@
+@namespace("org.ga4gh")
+/**
+This protocol defines annotations on GA4GH reference genomes. 
+*/
+protocol GAAnnotation {
+
+import idl "../common.avdl";
+
+
+}
