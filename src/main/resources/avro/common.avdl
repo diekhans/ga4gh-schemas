@@ -53,6 +53,15 @@ record GARegion {
 }
 
 /**
+Identifier from a public database
+*/
+record GAExternalIdentifier {
+  string database;
+  string identifier;
+  string version;
+}
+
+/**
 An enum for the different types of CIGAR alignment operations that exist.
 Used wherever CIGAR alignments are used. The different enumerated values
 have the following usage:
