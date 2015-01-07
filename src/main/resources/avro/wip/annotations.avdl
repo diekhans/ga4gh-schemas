@@ -43,6 +43,12 @@ record GATranscript {
   array<GARegion> exons = [];
 
   /**
+  CDS
+  */
+  GAPosition coding_start;
+  GAPosition coding_end;
+
+  /**
   External descriptions (Ensembl, RefSeq...)
   */
   array<GAExternalIdentifier> references = [];
