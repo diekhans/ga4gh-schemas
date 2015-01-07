@@ -33,4 +33,35 @@ record GAWiggle {
   array<float> values = [];
 }
 
+/** 
+Transcript
+*/
+record GATranscript {
+  /**
+  Exons 
+  */
+  array<GARegion> exons = [];
+
+  /**
+  External descriptions (Ensembl, RefSeq...)
+  */
+  array<GAExternalIdentifier> references = [];
+
+}
+
+/**
+Gene
+*/
+record GAGene {
+  /**
+  Transcripts
+  */
+  array<GATranscript> transcripts = [];
+
+  /**
+  External descriptions (Ensembl, RefSeq, GO, Uniprot...)
+  */
+  array<GAExternalIdentifier> references = [];
+}
+
 }
