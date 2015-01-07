@@ -6,5 +6,31 @@ protocol GAAnnotation {
 
 import idl "../common.avdl";
 
+/**
+Numerical annotation along a region
+*/
+record GAWiggle {
+  /** 
+  The region being annotated
+  Note that we are fusing parts of BedGraph and Wig syntax.
+  The region is being fully annotated, but can be divided into bins.
+  If you have gaps, you need to define a sequence of such GAWiggles. 
+  */
+  GARegion region;
+ 
+  /**
+  The values associated to this region.
+  If this list contains _count_ elements, then the region is divided
+  as cleanly as possible into _count_ bins of equal width. 
+  We thus define a numerical function:
+
+  value(position):
+    if position < start or position >= start + length:
+      return None
+    else:
+      return array[floor((position - start)*count/length)]
+  */ 
+  array<float> values = [];
+}
 
 }
