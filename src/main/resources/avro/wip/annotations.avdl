@@ -2,18 +2,18 @@
 /**
 This protocol defines annotations on GA4GH reference genomes. 
 */
-protocol GAAnnotation {
+protocol Annotation {
 
 import idl "../common.avdl";
 
 /**
 Categorical annotation of a single region
 */
-record GAAnnotatedRegion {
+record AnnotatedRegion {
   /** 
   The region being annotated
   */
-  GARegion region;
+  Region region;
  
   /**
   External descriptions (Sequence Ontology...)
@@ -24,14 +24,14 @@ record GAAnnotatedRegion {
 /**
 Numerical annotation along a region
 */
-record GAWiggle {
+record Wiggle {
   /** 
   The region being annotated
   Note that we are fusing parts of BedGraph and Wig syntax.
   The region is being fully annotated, but can be divided into bins.
-  If you have gaps, you need to define a sequence of such GAWiggles. 
+  If you have gaps, you need to define a sequence of such Wiggles. 
   */
-  GARegion region;
+  Region region;
  
   /**
   The values associated to this region.
@@ -53,26 +53,26 @@ Primary Transcript
 For trans-spliced genes only!
 !!! This is purely for GFF3 consistency, does not apply to human biology
 */
-record GAPrimaryTranscript {
+record PrimaryTranscript {
   /**
   ID 
   */
-  GAExternalIndentifier ID;
+  ExternalIndentifier ID;
 
   /**
   Parent transcript
   */
-  GAExternalIdentifier parent;
+  ExternalIdentifier parent;
 
   /** 
   The region being annotated
   */
-  GARegion region;
+  Region region;
  
   /**
   Gene: Remember trans-spliced transcript derives from 2 genes.
   */
-  GAExternalIdentifier gene;
+  ExternalIdentifier gene;
 
 }
 
@@ -81,26 +81,26 @@ Splice leader RNA
 For trans-spliced genes only!
 !!! This is purely for GFF3 consistency, does not apply to human biology
 */
-record GASplicedLeaderRNA {
+record SplicedLeaderRNA {
   /**
   ID 
   */
-  GAExternalIdentifier ID;
+  ExternalIdentifier ID;
 
   /**
   Parent transcript
   */
-  GAExternalIdentifier parent;
+  ExternalIdentifier parent;
 
   /** 
   The region being annotated
   */
-  GARegion region;
+  Region region;
  
   /**
   Gene: Remember trans-spliced transcript derives from 2 genes.
   */
-  GAExternalIdentifier gene;
+  ExternalIdentifier gene;
 
 }
 
@@ -108,27 +108,27 @@ record GASplicedLeaderRNA {
 Intein
 !!! Only relevant to describe inteins. (http://en.wikipedia.org/wiki/Intein)
 */
-record GAIntein{
+record Intein{
   /**
   ID 
   */
-  GAExternalIdentifier ID; 
+  ExternalIdentifier ID; 
 
   /**
   Parent Polypeptide
   */
-  GAExternalIdentifier parent;
+  ExternalIdentifier parent;
 
   /** 
   The region being annotated
   */
-  GARegion region;
+  Region region;
 
   /**
   Gene: some people like to assign a different gene identifier to the intein and 
   the residual gene.
   */
-  GAExternalIdentifier gene;
+  ExternalIdentifier gene;
 
 }
 
@@ -136,27 +136,27 @@ record GAIntein{
 Mature Polypeptide
 !!! Only relevant to describe inteins. (http://en.wikipedia.org/wiki/Intein)
 */
-record GAMaturePolypeptide {
+record MaturePolypeptide {
   /**
   ID 
   */
-  GAExternalIdentifier ID; 
+  ExternalIdentifier ID; 
 
   /**
   Parent Polypeptide
   */
-  GAExternalIdentifier parent;
+  ExternalIdentifier parent;
 
   /** 
   The region being annotated
   */
-  GARegion region;
+  Region region;
 
   /**
   Gene: some people like to assign a different gene identifier to the intein and 
   the residual gene.
   */
-  GAExternalIdentifier gene;
+  ExternalIdentifier gene;
 
 }
 
@@ -164,54 +164,54 @@ record GAMaturePolypeptide {
 Polypeptide
 !!! Only relevant to describe inteins. (http://en.wikipedia.org/wiki/Intein)
 */
-record GAPolypeptide {
+record Polypeptide {
   /**
   ID 
   */
-  GAExternalIdentifier ID; 
+  ExternalIdentifier ID; 
 
   /**
   Parent CDS
   */
-  GAExternalIdentifier parent;
+  ExternalIdentifier parent;
 
   /** 
   The region being annotated
   */
-  GARegion region;
+  Region region;
 
   /**
   Mature polypeptides
   List of exteins conserved in amino acid chain
   */
-  array<GAMaturePolypeptide> = [];
+  array<MaturePolypeptide> = [];
 
   /**
   Inteins 
   List of inteins removed from amino acid chain
   */
-  array<GAIntein> = [];
+  array<Intein> = [];
 
 }
 
 /**
 Coding sequence (CDS)
 */
-record GACDS {
+record CDS {
   /**
   ID 
   */
-  GAExternalIdentifier ID;
+  ExternalIdentifier ID;
 
   /**
   Parent exon
   */
-  GAExternalIdentifier parent;
+  ExternalIdentifier parent;
 
   /** 
   The region being annotated
   */
-  GARegion region;
+  Region region;
  
   /**
   Phase of the first base of the CDS: 
@@ -227,78 +227,78 @@ record GACDS {
   (http://www.sequenceontology.org/gff3.shtml) if a transcript is polycistronic
   each CDS derives from one of multiple genes.
   */
-  GAExternalIdentifier gene;
+  ExternalIdentifier gene;
 
   /**
   Polypeptide:
   Only relevant to describe inteins, purely for GFF3 conformity
   */
-  array<GAPolypeptide> = [];
+  array<Polypeptide> = [];
 }
 
 /**
 Exonic region
 */
-record GAExon {
+record Exon {
   /**
   ID 
   */
-  GAExternalIdentifier ID;
+  ExternalIdentifier ID;
 
   /**
   Parent transcript
   */
-  GAExternalIdentifier parent;
+  ExternalIdentifier parent;
 
   /** 
   The region being annotated
   */
-  GARegion region;
+  Region region;
 
   /**
   The coding sequence(s) of the exon.
   In 99% of cases there is exactly one CDS per exon, but in the case of frameshifts
   you have multiple CDSs per exon (http://www.sequenceontology.org/gff3.shtml).
   */
-  array<GACDS> CDSs = []
+  array<CDS> CDSs = []
 }
 
 /** 
 Transcript
 */
-record GATranscript {
+record Transcript {
   /**
   ID 
   */
-  GAExternalIdentifier ID;
+  ExternalIdentifier ID;
 
   /**
   Parent gene(s)
   In 99% of cases, 1 transcript => 1 gene, but not in the case of
   trans-spliced genes, poly-cistronic transcripts or fusion transcripts
   */
-  array<GAExternalIdentifier> parents = [];
+  array<ExternalIdentifier> parents = [];
 
   /**
   Exons 
   */
-  array<GAExon> exons = [];
+  array<Exon> exons = [];
 
   /**
   External descriptions (Ensembl, RefSeq...)
   */
-  GAExternalIdentifier references;
+  ExternalIdentifier references;
 
 }
 
 /**
 Gene
 */
-record GAGene {
+record Gene {
   /**
   ID 
   */
-  GAExternalIdentifier ID;
+  ExternalIdentifier ID;
 
   /**
   Name 
@@ -308,17 +308,17 @@ record GAGene {
   /**
   Parent dataset
   */
-  GAExternalIdentifier source;
+  ExternalIdentifier source;
 
   /**
   Transcripts
   */
-  array<GATranscript> transcripts = [];
+  array<Transcript> transcripts = [];
 
   /**
   External reference (Ensembl, RefSeq)
   */
-  GAExternalIdentifier references;
+  ExternalIdentifier references;
 
   /**
   Description/categorization
