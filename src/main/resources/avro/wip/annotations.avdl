@@ -18,7 +18,7 @@ record GAAnnotatedRegion {
   /**
   External descriptions (Sequence Ontology...)
   */
-  array<GAExternalIdentifier> references = [];
+  array<OntologyTerm> description = [];
 }
 
 /**
@@ -49,28 +49,218 @@ record GAWiggle {
 }
 
 /**
-Exonic region
+Primary Transcript
+For trans-spliced genes only!
+!!! This is purely for GFF3 consistency, does not apply to human biology
 */
-record GAExon {
+record GAPrimaryTranscript {
+  /**
+  ID 
+  */
+  GAExternalIndentifier ID;
+
+  /**
+  Parent transcript
+  */
+  GAExternalIdentifier parent;
+
   /** 
   The region being annotated
   */
   GARegion region;
  
   /**
-  Phase of the first base of the exon: 
+  Gene: Remember trans-spliced transcript derives from 2 genes.
+  */
+  GAExternalIdentifier gene;
+
+}
+
+/**
+Splice leader RNA
+For trans-spliced genes only!
+!!! This is purely for GFF3 consistency, does not apply to human biology
+*/
+record GASplicedLeaderRNA {
+  /**
+  ID 
+  */
+  GAExternalIdentifier ID;
+
+  /**
+  Parent transcript
+  */
+  GAExternalIdentifier parent;
+
+  /** 
+  The region being annotated
+  */
+  GARegion region;
+ 
+  /**
+  Gene: Remember trans-spliced transcript derives from 2 genes.
+  */
+  GAExternalIdentifier gene;
+
+}
+
+/**
+Intein
+!!! Only relevant to describe inteins. (http://en.wikipedia.org/wiki/Intein)
+*/
+record GAIntein{
+  /**
+  ID 
+  */
+  GAExternalIdentifier ID; 
+
+  /**
+  Parent Polypeptide
+  */
+  GAExternalIdentifier parent;
+
+  /** 
+  The region being annotated
+  */
+  GARegion region;
+
+  /**
+  Gene: some people like to assign a different gene identifier to the intein and 
+  the residual gene.
+  */
+  GAExternalIdentifier gene;
+
+}
+
+/**
+Mature Polypeptide
+!!! Only relevant to describe inteins. (http://en.wikipedia.org/wiki/Intein)
+*/
+record GAMaturePolypeptide {
+  /**
+  ID 
+  */
+  GAExternalIdentifier ID; 
+
+  /**
+  Parent Polypeptide
+  */
+  GAExternalIdentifier parent;
+
+  /** 
+  The region being annotated
+  */
+  GARegion region;
+
+  /**
+  Gene: some people like to assign a different gene identifier to the intein and 
+  the residual gene.
+  */
+  GAExternalIdentifier gene;
+
+}
+
+/**
+Polypeptide
+!!! Only relevant to describe inteins. (http://en.wikipedia.org/wiki/Intein)
+*/
+record GAPolypeptide {
+  /**
+  ID 
+  */
+  GAExternalIdentifier ID; 
+
+  /**
+  Parent CDS
+  */
+  GAExternalIdentifier parent;
+
+  /** 
+  The region being annotated
+  */
+  GARegion region;
+
+  /**
+  Mature polypeptides
+  List of exteins conserved in amino acid chain
+  */
+  array<GAMaturePolypeptide> = [];
+
+  /**
+  Inteins 
+  List of inteins removed from amino acid chain
+  */
+  array<GAIntein> = [];
+
+}
+
+/**
+Coding sequence (CDS)
+*/
+record GACDS {
+  /**
+  ID 
+  */
+  GAExternalIdentifier ID;
+
+  /**
+  Parent exon
+  */
+  GAExternalIdentifier parent;
+
+  /** 
+  The region being annotated
+  */
+  GARegion region;
+ 
+  /**
+  Phase of the first base of the CDS: 
   0: first base of codon
   1: second base of codon
   2: third base of codon
   -1: not in CDS
   */
   int phase;
+  
+  /**
+  Gene: this is useless in 99% of cases, but as highlighted by the GFF3 commitee
+  (http://www.sequenceontology.org/gff3.shtml) if a transcript is polycistronic
+  each CDS derives from one of multiple genes.
+  */
+  GAExternalIdentifier gene;
+
+  /**
+  Polypeptide:
+  Only relevant to describe inteins, purely for GFF3 conformity
+  */
+  array<GAPolypeptide> = [];
+}
+
+/**
+Exonic region
+*/
+record GAExon {
+  /**
+  ID 
+  */
+  GAExternalIdentifier ID;
+
+  /**
+  Parent transcript
+  */
+  GAExternalIdentifier parent;
 
   /** 
-  Possible regions of ribosomal slippage 
+  The region being annotated
   */
-  array<GARegion> slippage_regions = [];
-  
+  GARegion region;
+
+  /**
+  The coding sequence(s) of the exon.
+  In 99% of cases there is exactly one CDS per exon, but in the case of frameshifts
+  you have multiple CDSs per exon (http://www.sequenceontology.org/gff3.shtml).
+  */
+  array<GACDS> CDSs = []
 }
 
 /** 
@@ -78,9 +268,16 @@ Transcript
 */
 record GATranscript {
   /**
-  Parent gene
+  ID 
   */
-  string parent;
+  GAExternalIdentifier ID;
+
+  /**
+  Parent gene(s)
+  In 99% of cases, 1 transcript => 1 gene, but not in the case of
+  trans-spliced genes, poly-cistronic transcripts or fusion transcripts
+  */
+  array<GAExternalIdentifier> parents = [];
 
   /**
   Exons 
@@ -88,15 +285,9 @@ record GATranscript {
   array<GAExon> exons = [];
 
   /**
-  CDS
-  */
-  GAPosition coding_start;
-  GAPosition coding_end;
-
-  /**
   External descriptions (Ensembl, RefSeq...)
   */
-  array<GAExternalIdentifier> references = [];
+  GAExternalIdentifier references;
 
 }
 
@@ -105,14 +296,35 @@ Gene
 */
 record GAGene {
   /**
+  ID 
+  */
+  GAExternalIdentifier ID;
+
+  /**
+  Name 
+  */
+  string name;
+
+  /**
+  Parent dataset
+  */
+  GAExternalIdentifier source;
+
+  /**
   Transcripts
   */
   array<GATranscript> transcripts = [];
 
   /**
-  External descriptions (Ensembl, RefSeq, GO, Uniprot...)
+  External reference (Ensembl, RefSeq)
   */
-  array<GAExternalIdentifier> references = [];
+  GAExternalIdentifier references;
+
+  /**
+  Description/categorization
+  (e.g. GO)
+  */
+  array<OntologyTerm> description = [];
 }
 
 }
