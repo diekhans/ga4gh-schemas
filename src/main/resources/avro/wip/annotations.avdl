@@ -57,7 +57,7 @@ record PrimaryTranscript {
   /**
   ID 
   */
-  ExternalIndentifier ID;
+  ExternalIdentifier ID;
 
   /**
   Parent transcript
@@ -284,11 +284,6 @@ record Transcript {
   */
   array<Exon> exons = [];
 
-  /**
-  External descriptions (Ensembl, RefSeq...)
-  */
-  ExternalIdentifier references;
-
 }
 
 /**
@@ -314,11 +309,6 @@ record Gene {
   Transcripts
   */
   array<Transcript> transcripts = [];
-
-  /**
-  External reference (Ensembl, RefSeq)
-  */
-  ExternalIdentifier references;
 
   /**
   Description/categorization
