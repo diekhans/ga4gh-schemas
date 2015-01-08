@@ -48,20 +48,56 @@ record GAWiggle {
   array<float> values = [];
 }
 
+/**
+Exonic region
+*/
+record GAExon {
+  /** 
+  The region being annotated
+  */
+  GARegion region;
+ 
+  /**
+  Phase of the first base of the exon: 
+  0: first base of codon
+  1: second base of codon
+  2: third base of codon
+  -1: not in CDS
+  */
+  int phase;
+
+  /** 
+  Possible regions of ribosomal slippage 
+  */
+  array<GARegion> slippage_regions = [];
+  
+}
+
 /** 
 Transcript
 */
 record GATranscript {
   /**
+  Parent gene
+  */
+  string parent;
+
+  /**
   Exons 
   */
-  array<GARegion> exons = [];
+  array<GAExon> exons = [];
 
   /**
   CDS
   */
   GAPosition coding_start;
   GAPosition coding_end;
+
+  /**
+  Coding exons, identified by their index in array (0-based)
+  */
+  int first_coding_exon;
+  int last_coding_exon;
 
   /**
   External descriptions (Ensembl, RefSeq...)
