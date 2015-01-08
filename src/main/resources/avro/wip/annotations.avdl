@@ -7,6 +7,21 @@ protocol GAAnnotation {
 import idl "../common.avdl";
 
 /**
+Categorical annotation of a single region
+*/
+record GAAnnotatedRegion {
+  /** 
+  The region being annotated
+  */
+  GARegion region;
+ 
+  /**
+  External descriptions (Sequence Ontology...)
+  */
+  array<GAExternalIdentifier> references = [];
+}
+
+/**
 Numerical annotation along a region
 */
 record GAWiggle {
