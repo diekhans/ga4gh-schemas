@@ -184,13 +184,13 @@ record Polypeptide {
   Mature polypeptides
   List of exteins conserved in amino acid chain
   */
-  array<MaturePolypeptide> = [];
+  array<MaturePolypeptide> mature_polypeptides = [];
 
   /**
   Inteins 
   List of inteins removed from amino acid chain
   */
-  array<Intein> = [];
+  array<Intein> inteins = [];
 
 }
 
@@ -233,7 +233,7 @@ record CDS {
   Polypeptide:
   Only relevant to describe inteins, purely for GFF3 conformity
   */
-  array<Polypeptide> = [];
+  array<Polypeptide> polypeptides = [];
 }
 
 /**
