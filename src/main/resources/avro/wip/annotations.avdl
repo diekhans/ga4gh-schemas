@@ -94,12 +94,6 @@ record GATranscript {
   GAPosition coding_end;
 
   /**
-  Coding exons, identified by their index in array (0-based)
-  */
-  int first_coding_exon;
-  int last_coding_exon;
-
-  /**
   External descriptions (Ensembl, RefSeq...)
   */
   array<GAExternalIdentifier> references = [];
