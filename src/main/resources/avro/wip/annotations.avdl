@@ -1,4 +1,4 @@
-@namespace("org.ga4gh")
+@namespace("org.ga4gh.models")
 /**
 This protocol defines annotations on GA4GH reference genomes. 
 */
@@ -108,7 +108,7 @@ record SplicedLeaderRNA {
 Intein
 !!! Only relevant to describe inteins. (http://en.wikipedia.org/wiki/Intein)
 */
-record Intein{
+record Intein {
   /**
   ID 
   */
@@ -260,7 +260,7 @@ record Exon {
   In 99% of cases there is exactly one CDS per exon, but in the case of frameshifts
   you have multiple CDSs per exon (http://www.sequenceontology.org/gff3.shtml).
   */
-  array<CDS> CDSs = []
+  array<CDS> CDSs = [];
 }
 
 /** 
