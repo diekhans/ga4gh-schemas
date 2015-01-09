@@ -98,28 +98,6 @@ record ExternalIdentifier {
 }
 
 /**
-A Key Value pair
-*/
-
-record OntologyTerm {
-  /**
-  The source of the onotology term.
-  (e.g. `Ontology for Biomedical Investigation`)
-  */
-  string ontologySource;
-
-  /**
-  The ID defined by the external onotology source.
-  (e.g. `http://purl.obolibrary.org/obo/OBI_0001271`)
-  */
-  string id;
-
-  /** The name of the onotology term. (e.g. `RNA-seq assay`) */
-  union { null, string } name = null;
-}
-
-
-/**
 An enum for the different types of CIGAR alignment operations that exist.
 Used wherever CIGAR alignments are used. The different enumerated values
 have the following usage:
