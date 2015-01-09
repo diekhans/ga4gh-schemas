@@ -36,7 +36,7 @@ record Wiggle {
   The region is being fully annotated, but can be divided into bins.
   If you have gaps, you need to define a sequence of such Wiggles. 
   */
-  AnnotatedRegion region;
+  Region region;
  
   /**
   The values associated to this region.
