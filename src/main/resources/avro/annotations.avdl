@@ -289,6 +289,24 @@ record Transcript {
   */
   array<Exon> exons = [];
 
+  /**
+  Annotations (Any SO object that is not explicitly represented by a record)
+  - Alignment exceptions
+  - Intron types
+  - Start and end codon
+  - etc.
+  */
+  array<AnnotatedRegion> annotation = [];
+
+  /**
+  External descriptions (Sequence Ontology...)
+  */
+  array<OntologyTerm> description = [];
+
+  /**
+  Other annotations (denormalised)
+  */
+  map<string> annotations;
 }
 
 /**
@@ -309,6 +327,16 @@ record Gene {
   Transcripts
   */
   array<Transcript> transcripts = [];
+
+  /**
+  External descriptions (Gene Ontology...)
+  */
+  array<OntologyTerm> description = [];
+
+  /**
+  Other annotations (denormalised)
+  */
+  map<string> annotations;
 }
 
 }
