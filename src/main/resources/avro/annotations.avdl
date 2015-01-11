@@ -4,7 +4,7 @@ This protocol defines annotations on GA4GH reference genomes.
 */
 protocol Annotation {
 
-import idl "../common.avdl";
+import idl "common.avdl";
 
 /**
 Categorical annotation of a single region
