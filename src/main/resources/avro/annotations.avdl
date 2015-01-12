@@ -54,169 +54,43 @@ record Wiggle {
 }
 
 /**
-Primary Transcript
-For trans-spliced genes only!
-!!! This is purely for GFF3 consistency, does not apply to human biology
+GFFObject
 */
-record PrimaryTranscript {
+record GFFRegion {
   /**
-  ID 
+  Basic data
+  */
+  AnnotatedRegion annotation;
+
+  /**
+  ID
   */
   ExternalIdentifier ID;
 
   /**
-  Parent transcript
+  Parent 
   */
   ExternalIdentifier parent;
 
-  /** 
-  The region being described
-  */
-  AnnotatedRegion region;
- 
   /**
-  Gene: Remember trans-spliced transcript derives from 2 genes.
+  Derives from 
   */
-  ExternalIdentifier gene;
-
-}
-
-/**
-Splice leader RNA
-For trans-spliced genes only!
-!!! This is purely for GFF3 consistency, does not apply to human biology
-*/
-record SplicedLeaderRNA {
-  /**
-  ID 
-  */
-  ExternalIdentifier ID;
+  ExternalIdentifier derives_from;
 
   /**
-  Parent transcript
+  Components 
   */
-  ExternalIdentifier parent;
-
-  /** 
-  The region being described
-  */
-  AnnotatedRegion region;
- 
-  /**
-  Gene: Remember trans-spliced transcript derives from 2 genes.
-  */
-  ExternalIdentifier gene;
-
-}
-
-/**
-Intein
-!!! Only relevant to describe inteins. (http://en.wikipedia.org/wiki/Intein)
-*/
-record Intein {
-  /**
-  ID 
-  */
-  ExternalIdentifier ID; 
-
-  /**
-  Parent Polypeptide
-  */
-  ExternalIdentifier parent;
-
-  /** 
-  The region being described
-  */
-  AnnotatedRegion region;
-
-  /**
-  Gene: some people like to assign a different gene identifier to the intein and 
-  the residual gene.
-  */
-  ExternalIdentifier gene;
-
-}
-
-/**
-Mature Polypeptide
-!!! Only relevant to describe inteins. (http://en.wikipedia.org/wiki/Intein)
-*/
-record MaturePolypeptide {
-  /**
-  ID 
-  */
-  ExternalIdentifier ID; 
-
-  /**
-  Parent Polypeptide
-  */
-  ExternalIdentifier parent;
-
-  /** 
-  The region being described
-  */
-  AnnotatedRegion region;
-
-  /**
-  Gene: some people like to assign a different gene identifier to the intein and 
-  the residual gene.
-  */
-  ExternalIdentifier gene;
-
-}
-
-/**
-Polypeptide
-!!! Only relevant to describe inteins. (http://en.wikipedia.org/wiki/Intein)
-*/
-record Polypeptide {
-  /**
-  ID 
-  */
-  ExternalIdentifier ID; 
-
-  /**
-  Parent CDS
-  */
-  ExternalIdentifier parent;
-
-  /** 
-  The region being described
-  */
-  AnnotatedRegion region;
-
-  /**
-  Mature polypeptides
-  List of exteins conserved in amino acid chain
-  */
-  array<MaturePolypeptide> mature_polypeptides = [];
-
-  /**
-  Inteins 
-  List of inteins removed from amino acid chain
-  */
-  array<Intein> inteins = [];
-
+  array<GFFRegion> components;
 }
 
 /**
 Coding sequence (CDS)
 */
 record CDS {
-  /**
-  ID 
-  */
-  ExternalIdentifier ID;
-
-  /**
-  Parent exon
-  */
-  ExternalIdentifier parent;
-
   /** 
-  The region being described
+  Basic data 
   */
-  AnnotatedRegion region;
+  GFFRegion gff;
  
   /**
   Phase of the first base of the CDS: 
@@ -226,39 +100,16 @@ record CDS {
   -1: not in CDS
   */
   int phase;
-  
-  /**
-  Gene: this is useless in 99% of cases, but as highlighted by the GFF3 commitee
-  (http://www.sequenceontology.org/gff3.shtml) if a transcript is polycistronic
-  each CDS derives from one of multiple genes.
-  */
-  ExternalIdentifier gene;
-
-  /**
-  Polypeptide:
-  Only relevant to describe inteins, purely for GFF3 conformity
-  */
-  array<Polypeptide> polypeptides = [];
 }
 
 /**
-Exonic region
+Exon
 */
 record Exon {
   /**
-  ID 
+  Basic data 
   */
-  ExternalIdentifier ID;
-
-  /**
-  Parent transcript
-  */
-  ExternalIdentifier parent;
-
-  /** 
-  The region being described
-  */
-  AnnotatedRegion region;
+  GFFRegion gff;
 
   /**
   The coding sequence(s) of the exon.
@@ -283,6 +134,12 @@ record Transcript {
   trans-spliced genes, poly-cistronic transcripts or fusion transcripts
   */
   array<ExternalIdentifier> parents = [];
+
+  /**
+  Components 
+  Typically primary_transcript and spliced_leader_RNA for trans-splicing events.
+  */
+  array<Transcript> components;
 
   /**
   Exons 
