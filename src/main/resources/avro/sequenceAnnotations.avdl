@@ -27,7 +27,7 @@ still represents GFF3 DAG with attribute linking.
 
 FIXME: should the discrete annotations be it's own protocol?
 */
-protocol Annotation {
+protocol SequenceAnnotations {
 
 import idl "common.avdl";
 
