@@ -1,33 +1,39 @@
 @namespace("org.ga4gh.models")
 /**
-This protocol defines annotations on GA4GH reference genomes. 
+This protocol defines annotations on GA4GH genomic sequences It includes two
+types of annotations: continuous and discrete hierarchical.
+
+The discrete hierarchical annotations are  derived from the Sequence Ontology (SO) and GFF3 work
+   http://www.sequenceontology.org/gff3.shtml
+
+The goal is to be able to store annotations using the GFF3 and SO conceptual
+model, although there is not necessarly a one-to-one mapping in Avro records
+to GFF3 records.  One exception is that we don't include the alignment
+attributes in the specification (Target and Gap), as we feel these are better
+represented in a aligment-specific record and link to by the annotation.
+
+The minimum requirement is to be able to accurately represent the current
+state of the art annotation data and the full SO model.  SeqAnnRegion is the
+core generic record which corresponds to the a GFF3 record.  These are
+organized into a tree.  Special, not-tree cases are implemented by linking
+objects via attributes and ids.  More specific record types (SeqAnnGene,
+SeqAnnTranscript, etc) are provide to have a higher level representation for
+the common case.  However, SeqAnnRegion objects can occur anywhere in the
+tree. The lack of polymorphism support in Avro is compensated for by use of
+unions.
+
+FIXME: need much more documentation, describe differences and how tree here
+still represents GFF3 DAG with attribute linking.
+
+FIXME: should the discrete annotations be it's own protocol?
 */
 protocol Annotation {
 
 import idl "common.avdl";
 
 /**
-Categorical annotation of a single region
-*/
-record AnnotatedRegion {
-  /** 
-  The region being described
-  */
-  Region region;
- 
-  /**
-  External descriptions (Sequence Ontology...)
-  */
-  array<OntologyTerm> description = [];
-
-  /**
-  Other annotations (denormalised)
-  */
-  map<string> annotations;
-}
-
-/**
-Numerical annotation along a region
+Continuous numerical annotation along a region.
+FIXME: more details and relate to UCSC browser tracks
 */
 record Wiggle {
   /** 
@@ -54,146 +60,164 @@ record Wiggle {
 }
 
 /**
-GFFObject
+Data for annotated genome region.  
 */
-record GFFRegion {
+record SeqAnnData {
   /**
-  Basic data
+  Genomic location.
   */
-  AnnotatedRegion annotation;
+  Region region;
+
+  /** Id of this annotation node. */
+  union {null, string} id;
 
   /**
-  ID
+  Feature that is annotated by this region.  Normally, this will be a term in
+  the Sequence Ontology.
   */
-  ExternalIdentifier ID;
-
+  OntologyTerm feature;
+  
   /**
-  Parent 
+  Name/value attributes of annotation.
   */
-  ExternalIdentifier parent;
-
-  /**
-  Derives from 
-  */
-  ExternalIdentifier derives_from;
-
-  /**
-  Components 
-  */
-  array<GFFRegion> components;
+  map<union {
+    null,
+    string,
+    ExternalIdentifier,
+    OntologyTerm
+  }> attributes;
 }
-
+    
 /**
-Coding sequence (CDS)
+Generic region hierarchical annotation node
 */
-record CDS {
-  /** 
-  Basic data 
-  */
-  GFFRegion gff;
- 
+record SeqAnnRegion {
+  /* Data for this region */
+  SeqAnnData data;
+
   /**
-  Phase of the first base of the CDS: 
-  0: first base of codon
-  1: second base of codon
-  2: third base of codon
-  -1: not in CDS
+  Component hierarchy of the annotation. 
   */
+  array<SeqAnnRegion> components;
+}
+  
+/**
+CDS annotation 
+*/
+record SeqAnnCds {
+  /* Data for this region */
+  SeqAnnData data;
+
+  /* coding phase */
   int phase;
+
+  /**
+  Component hierarchy of the annotation. 
+  */
+  array<SeqAnnRegion> components;
 }
 
 /**
-Exon
+5'UTR annotation 
 */
-record Exon {
-  /**
-  Basic data 
-  */
-  GFFRegion gff;
+record SeqAnn5Utr {
+  /* Data for this region */
+  SeqAnnData data;
 
   /**
-  The coding sequence(s) of the exon.
-  In 99% of cases there is exactly one CDS per exon, but in the case of frameshifts
-  you have multiple CDSs per exon (http://www.sequenceontology.org/gff3.shtml).
+  Component hierarchy of the annotation. 
   */
-  array<CDS> CDSs = [];
-}
-
-/** 
-Transcript
-*/
-record Transcript {
-  /**
-  ID 
-  */
-  ExternalIdentifier ID;
-
-  /**
-  Parent gene(s)
-  In 99% of cases, 1 transcript => 1 gene, but not in the case of
-  trans-spliced genes, poly-cistronic transcripts or fusion transcripts
-  */
-  array<ExternalIdentifier> parents = [];
-
-  /**
-  Components 
-  Typically primary_transcript and spliced_leader_RNA for trans-splicing events.
-  */
-  array<Transcript> components;
-
-  /**
-  Exons 
-  */
-  array<Exon> exons = [];
-
-  /**
-  Annotations (Any SO object that is not explicitly represented by a record)
-  - Alignment exceptions
-  - Intron types
-  - Start and end codon
-  - etc.
-  */
-  array<AnnotatedRegion> annotation = [];
-
-  /**
-  External descriptions (Sequence Ontology...)
-  */
-  array<OntologyTerm> description = [];
-
-  /**
-  Other annotations (denormalised)
-  */
-  map<string> annotations;
+  array<SeqAnnRegion> components;
 }
 
 /**
-Gene
+3'UTR annotation 
 */
-record Gene {
-  /**
-  ID 
-  */
-  ExternalIdentifier ID;
+record SeqAnn3Utr {
+  /* Data for this region */
+  SeqAnnData data;
 
   /**
-  Parent dataset
+  Component hierarchy of the annotation. 
   */
-  ExternalIdentifier source;
-
-  /**
-  Transcripts
-  */
-  array<Transcript> transcripts = [];
-
-  /**
-  External descriptions (Gene Ontology...)
-  */
-  array<OntologyTerm> description = [];
-
-  /**
-  Other annotations (denormalised)
-  */
-  map<string> annotations;
+  array<SeqAnnRegion> components;
 }
 
+/**
+Exon annotation 
+*/
+record SeqAnnExon {
+  /* Data for this region */
+  SeqAnnData data;
+
+  /**
+  Component hierarchy of the annotation. 
+  */
+  array<union {
+    SeqAnnRegion,
+    SeqAnnCds,
+    SeqAnn5Utr,
+    SeqAnn3Utr
+  } > components;
 }
+
+/**
+Intron annotation 
+*/
+record SeqAnnIntron {
+  /* Data for this region */
+  SeqAnnData data;
+
+  string intronType; 
+
+  /**
+  Component hierarchy of the annotation. 
+  */
+  array<union {
+    SeqAnnRegion
+   }> components;
+}
+
+/**
+Transcript hierarchical annotation 
+*/
+record SeqAnnTranscript {
+  /* Data for this region */
+  SeqAnnData data;
+
+  /**
+  Component hierarchy of the annotation. 
+  */
+  array<union {
+    SeqAnnRegion,
+    SeqAnnExon,
+    SeqAnnIntron
+   } > components;
+}
+
+/**
+Gene hierarchical annotation 
+*/
+record SeqAnnGene {
+  /* Data for this region */
+  SeqAnnData data;
+
+  /**
+  Component hierarchy of the annotation. 
+  */
+  array<union {
+    SeqAnnRegion,
+    SeqAnnTranscript
+   }> components;
+}
+
+/*
+A set of annotations
+*/
+record SeqAnnSet {
+  /** Id of this annotation node. */
+  string id;
+
+  /* FIXME: what else is needed  */
+}  
+}  
