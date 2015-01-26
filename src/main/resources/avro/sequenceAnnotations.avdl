@@ -60,9 +60,24 @@ record Wiggle {
 }
 
 /**
-Data for annotated genome region.  
+Feature category.  This is an categorization of the feature ontology terms
+for common terms intended to make programming easier.
 */
-record SeqAnnData {
+enum SeqAnnFeatureCategory {
+  FEATURE_OTHER,
+  FEATURE_GENE,
+  FEATURE_TRANSCRIPT,
+  FEATURE_EXON,
+  FEATURE_INTRON,
+  FEATURE_5UTR,
+  FEATURE_CDS,
+  FEATURE_3UTR
+}
+  
+/**
+Hierarchical region annotation node.
+*/
+record SeqAnnRegion {
   /**
   Genomic location.
   */
@@ -76,6 +91,17 @@ record SeqAnnData {
   the Sequence Ontology.
   */
   OntologyTerm feature;
+
+  /**
+   Feature category.  This is an categorization of the feature ontology term
+   for common terms intended to make programming easier.
+  */
+  SeqAnnFeatureCategory featureCategory;
+
+  /**
+     phase for CDS, or -1 if not CDS
+   */
+  int phase;
   
   /**
   Name/value attributes of annotation.
@@ -86,138 +112,11 @@ record SeqAnnData {
     ExternalIdentifier,
     OntologyTerm
   }> attributes;
+
+  /**
+  Component hierarchy of the annotation. 
+  */
+  array<SeqAnnRegion> components;
 }
     
-/**
-Generic region hierarchical annotation node
-*/
-record SeqAnnRegion {
-  /* Data for this region */
-  SeqAnnData data;
-
-  /**
-  Component hierarchy of the annotation. 
-  */
-  array<SeqAnnRegion> components;
-}
-  
-/**
-CDS annotation 
-*/
-record SeqAnnCds {
-  /* Data for this region */
-  SeqAnnData data;
-
-  /* coding phase */
-  int phase;
-
-  /**
-  Component hierarchy of the annotation. 
-  */
-  array<SeqAnnRegion> components;
-}
-
-/**
-5'UTR annotation 
-*/
-record SeqAnn5Utr {
-  /* Data for this region */
-  SeqAnnData data;
-
-  /**
-  Component hierarchy of the annotation. 
-  */
-  array<SeqAnnRegion> components;
-}
-
-/**
-3'UTR annotation 
-*/
-record SeqAnn3Utr {
-  /* Data for this region */
-  SeqAnnData data;
-
-  /**
-  Component hierarchy of the annotation. 
-  */
-  array<SeqAnnRegion> components;
-}
-
-/**
-Exon annotation 
-*/
-record SeqAnnExon {
-  /* Data for this region */
-  SeqAnnData data;
-
-  /**
-  Component hierarchy of the annotation. 
-  */
-  array<union {
-    SeqAnnRegion,
-    SeqAnnCds,
-    SeqAnn5Utr,
-    SeqAnn3Utr
-  } > components;
-}
-
-/**
-Intron annotation 
-*/
-record SeqAnnIntron {
-  /* Data for this region */
-  SeqAnnData data;
-
-  string intronType; 
-
-  /**
-  Component hierarchy of the annotation. 
-  */
-  array<union {
-    SeqAnnRegion
-   }> components;
-}
-
-/**
-Transcript hierarchical annotation 
-*/
-record SeqAnnTranscript {
-  /* Data for this region */
-  SeqAnnData data;
-
-  /**
-  Component hierarchy of the annotation. 
-  */
-  array<union {
-    SeqAnnRegion,
-    SeqAnnExon,
-    SeqAnnIntron
-   } > components;
-}
-
-/**
-Gene hierarchical annotation 
-*/
-record SeqAnnGene {
-  /* Data for this region */
-  SeqAnnData data;
-
-  /**
-  Component hierarchy of the annotation. 
-  */
-  array<union {
-    SeqAnnRegion,
-    SeqAnnTranscript
-   }> components;
-}
-
-/*
-A set of annotations
-*/
-record SeqAnnSet {
-  /** Id of this annotation node. */
-  string id;
-
-  /* FIXME: what else is needed  */
-}  
 }  
