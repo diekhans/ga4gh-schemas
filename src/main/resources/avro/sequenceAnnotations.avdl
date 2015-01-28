@@ -60,31 +60,19 @@ record Wiggle {
 }
 
 /**
-Feature category.  This is an categorization of the feature ontology terms
-for common terms intended to make programming easier.
-*/
-enum SeqAnnFeatureCategory {
-  FEATURE_OTHER,
-  FEATURE_GENE,
-  FEATURE_TRANSCRIPT,
-  FEATURE_EXON,
-  FEATURE_INTRON,
-  FEATURE_5UTR,
-  FEATURE_CDS,
-  FEATURE_3UTR
-}
-  
-/**
 Hierarchical region annotation node.
 */
 record SeqAnnRegion {
   /**
+  Id of this annotation node.  Only require for nodes that need to be linked
+  outside of the tree or non-tree linking of nodes within the tree (e.g. Derived_from)
+  */
+  union {null, string} id;
+
+  /**
   Genomic location.
   */
   Region region;
-
-  /** Id of this annotation node. */
-  union {null, string} id;
 
   /**
   Feature that is annotated by this region.  Normally, this will be a term in
@@ -93,15 +81,9 @@ record SeqAnnRegion {
   OntologyTerm feature;
 
   /**
-   Feature category.  This is an categorization of the feature ontology term
-   for common terms intended to make programming easier.
-  */
-  SeqAnnFeatureCategory featureCategory;
-
-  /**
      phase for CDS, or -1 if not CDS
    */
-  int phase;
+  int phase = -1;
   
   /**
   Name/value attributes of annotation.
@@ -119,4 +101,13 @@ record SeqAnnRegion {
   array<SeqAnnRegion> components;
 }
     
+/*
+A set of annotations
+*/
+record SeqAnnSet {
+  /** Id of this annotation node. */
+  string id;
+
+  /* FIXME: what else is needed.   */
+}  
 }  
