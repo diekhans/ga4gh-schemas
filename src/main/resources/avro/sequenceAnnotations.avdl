@@ -33,12 +33,11 @@ import idl "common.avdl";
 
 /**
 Continuous numerical annotation along a region.
-FIXME: more details and relate to UCSC browser tracks
 */
-record Wiggle {
+record SeqAnnWiggle {
   /** 
   The region being described
-  Note that we are fusing parts of BedGraph and Wig syntax.
+  Note that we are fusing parts of UCSC BedGraph and Wiggle syntax.
   The region is being fully annotated, but can be divided into bins.
   If you have gaps, you need to define a sequence of such Wiggles. 
   */
@@ -59,6 +58,15 @@ record Wiggle {
   array<float> values = [];
 }
 
+/*
+A set of wiggle annotations
+*/
+record SeqAnnWiggleSet {
+  /** Id of this annotation node. */
+  string id;
+
+  /* FIXME: what else is needed.   */
+}  
 /**
 Hierarchical region annotation node.
 */
@@ -81,30 +89,24 @@ record SeqAnnRegion {
   OntologyTerm feature;
 
   /**
-     phase for CDS, or -1 if not CDS
-   */
-  int phase = -1;
-  
-  /**
   Name/value attributes of annotation.
   */
   map<union {
-    null,
     string,
     ExternalIdentifier,
     OntologyTerm
   }> attributes;
 
   /**
-  Component hierarchy of the annotation. 
+  Identifiers of children nodes
   */
-  array<SeqAnnRegion> components;
+  array<string> childrenIds;
 }
     
 /*
-A set of annotations
+A set of region annotations
 */
-record SeqAnnSet {
+record SeqAnnRegionSet {
   /** Id of this annotation node. */
   string id;
 
