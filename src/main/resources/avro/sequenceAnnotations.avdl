@@ -29,87 +29,87 @@ FIXME: should the discrete annotations be it's own protocol?
 */
 protocol SequenceAnnotations {
 
-import idl "common.avdl";
+  import idl "common.avdl";
 
-/**
-Continuous numerical annotation along a region.
-*/
-record SeqAnnWiggle {
-  /** 
-  The region being described
-  Note that we are fusing parts of UCSC BedGraph and Wiggle syntax.
-  The region is being fully annotated, but can be divided into bins.
-  If you have gaps, you need to define a sequence of such Wiggles. 
-  */
-  Region region;
- 
   /**
-  The values associated to this region.
-  If this list contains _count_ elements, then the region is divided
-  as cleanly as possible into _count_ bins of equal width. 
-  We thus define a numerical function:
+  Continuous numerical annotation along a region.
+  */
+  record SeqAnnWiggle {
+    /**
+    The region being described
+    Note that we are fusing parts of UCSC BedGraph and Wiggle syntax.
+    The region is being fully annotated, but can be divided into bins.
+    If you have gaps, you need to define a sequence of such Wiggles.
+    */
+    Region region;
 
-  value(position):
-    if position < start or position >= start + length:
-      return None
-    else:
-      return array[floor((position - start)*count/length)]
-  */ 
-  array<float> values = [];
+    /**
+    The values associated to this region.
+    If this list contains _count_ elements, then the region is divided
+    as cleanly as possible into _count_ bins of equal width.
+    We thus define a numerical function:
+
+    value(position):
+      if position < start or position >= start + length:
+        return None
+      else:
+        return array[floor((position - start)*count/length)]
+    */
+    array<float> values = [];
+  }
+
+  /*
+  A set of wiggle annotations
+  */
+  record SeqAnnWiggleSet {
+    /** Id of this annotation node. */
+    string id;
+
+    /* FIXME: what else is needed.   */
+  }
+  /**
+  Hierarchical region annotation node.
+  */
+  record SeqAnnRegion {
+    /**
+    Id of this annotation node.  Only require for nodes that need to be linked
+    outside of the tree or non-tree linking of nodes within the tree (e.g. Derived_from)
+    */
+    union {null, string} id;
+
+    /**
+    Genomic location.
+    */
+    Region region;
+
+    /**
+    Feature that is annotated by this region.  Normally, this will be a term in
+    the Sequence Ontology.
+    */
+    OntologyTerm feature;
+
+    /**
+    Name/value attributes of annotation.
+    */
+    map<union {
+      string,
+      ExternalIdentifier,
+      OntologyTerm
+    }> attributes;
+
+    /**
+    Identifiers of children nodes
+    */
+    array<string> childrenIds;
+  }
+
+  /*
+  A set of region annotations
+  */
+  record SeqAnnRegionSet {
+    /** Id of this annotation node. */
+    string id;
+
+    /* FIXME: what else is needed.   */
+  }
 }
-
-/*
-A set of wiggle annotations
-*/
-record SeqAnnWiggleSet {
-  /** Id of this annotation node. */
-  string id;
-
-  /* FIXME: what else is needed.   */
-}  
-/**
-Hierarchical region annotation node.
-*/
-record SeqAnnRegion {
-  /**
-  Id of this annotation node.  Only require for nodes that need to be linked
-  outside of the tree or non-tree linking of nodes within the tree (e.g. Derived_from)
-  */
-  union {null, string} id;
-
-  /**
-  Genomic location.
-  */
-  Region region;
-
-  /**
-  Feature that is annotated by this region.  Normally, this will be a term in
-  the Sequence Ontology.
-  */
-  OntologyTerm feature;
-
-  /**
-  Name/value attributes of annotation.
-  */
-  map<union {
-    string,
-    ExternalIdentifier,
-    OntologyTerm
-  }> attributes;
-
-  /**
-  Identifiers of children nodes
-  */
-  array<string> childrenIds;
-}
-    
-/*
-A set of region annotations
-*/
-record SeqAnnRegionSet {
-  /** Id of this annotation node. */
-  string id;
-
-  /* FIXME: what else is needed.   */
-}  
-}  
