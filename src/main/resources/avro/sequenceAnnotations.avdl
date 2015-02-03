@@ -71,12 +71,16 @@ protocol SequenceAnnotations {
   /**
   Hierarchical region annotation node.
   */
-  record SeqAnnRegion {
+  record SeqAnnRegion { // FIXME markd: could be SeqAnnFeature, which is consistent with current use
     /**
-    Id of this annotation node.  Only require for nodes that need to be linked
-    outside of the tree or non-tree linking of nodes within the tree (e.g. Derived_from)
+    Id of this annotation node.
     */
-    union {null, string} id;
+    string id;
+
+    /**
+     Id of the parent of this annotation node.
+    */
+    union {null, string} parentId;
 
     /**
     Identifier for the containing annotation set.
@@ -92,21 +96,19 @@ protocol SequenceAnnotations {
     Feature that is annotated by this region.  Normally, this will be a term in
     the Sequence Ontology.
     */
-    OntologyTerm feature; // TODO(calbach): Would prefer <something>Type.
+    OntologyTerm feature; // TODO(calbach): Would prefer <something>Type. markd: featureType would be great 
 
     /**
     Name/value attributes of annotation.
     */
+    // TODO(markd) a better way to represent this.  Maybe a type?  I recently
+    // saw a proposal were generate string values were arrays.  This is really nice because it
+    // removes the need to make up magic parsing rules to split string values.
     map<union {
       string,
       ExternalIdentifier,
       OntologyTerm
     }> attributes;
-
-    /**
-    Identifier for the parent annotation, if any.
-    */
-    string parentId;
   }
 
   /*
