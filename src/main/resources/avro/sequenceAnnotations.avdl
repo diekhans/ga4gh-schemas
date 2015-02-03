@@ -78,6 +78,11 @@ protocol SequenceAnnotations {
     union {null, string} id;
 
     /**
+    Identifier for the containing annotation set.
+    */
+    string annotationSetId;
+
+    /**
     Genomic location.
     */
     Region region;
@@ -86,7 +91,7 @@ protocol SequenceAnnotations {
     Feature that is annotated by this region.  Normally, this will be a term in
     the Sequence Ontology.
     */
-    OntologyTerm feature;
+    OntologyTerm feature; // TODO(calbach): Would prefer <something>Type.
 
     /**
     Name/value attributes of annotation.
@@ -98,9 +103,9 @@ protocol SequenceAnnotations {
     }> attributes;
 
     /**
-    Identifiers of children nodes
+    Identifier for the parent annotation, if any.
     */
-    array<string> childrenIds;
+    string parentId;
   }
 
   /*
