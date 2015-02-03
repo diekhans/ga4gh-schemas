@@ -67,6 +67,7 @@ protocol SequenceAnnotations {
 
     /* FIXME: what else is needed.   */
   }
+
   /**
   Hierarchical region annotation node.
   */
@@ -107,9 +108,28 @@ protocol SequenceAnnotations {
   A set of region annotations
   */
   record SeqAnnRegionSet {
-    /** Id of this annotation node. */
+    /** The ID of this annotation set. */
     string id;
 
-    /* FIXME: what else is needed.   */
+    /** The ID of the dataset this annotation set belongs to. */
+    union { null, string } datasetId = null;
+
+    /**
+    The ID of the reference set which defines the coordinate-space for this
+    set of annotations.
+    */
+    union { null, string } referenceSetId;
+
+    /** The display name for this annotation set. */
+    union { null, string } name = null;
+
+    /**
+    The source URI describing the file from which this annotation set was
+    generated, if any.
+    */
+    union { null, string } sourceURI = null;
+
+    /** A map of additional annotation set data. */
+    map<array<string>> info = {};
   }
 }
