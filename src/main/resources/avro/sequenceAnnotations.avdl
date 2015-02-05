@@ -73,7 +73,7 @@ protocol SequenceAnnotations {
   }
 
   /**
-  Hierarchical region annotation. This provides 
+  Node in the annotation graph that annotates a contiguous region of 
   */
   record SeqAnnRegion { // FIXME markd: could be SeqAnnFeature, which is consistent with current use
     /**
@@ -82,9 +82,9 @@ protocol SequenceAnnotations {
     string id;
 
     /**
-     Id of the parent of this annotation node.
+    Ids of the parents of this annotation node.  
     */
-    union {null, string} parentId = null;
+    array<string> parentIds = {};
 
     /**
     Identifier for the containing annotation set.
