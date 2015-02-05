@@ -84,7 +84,7 @@ protocol SequenceAnnotations {
     /**
     Ids of the parents of this annotation node.  
     */
-    array<string> parentIds = {};
+    array<string> parentIds;
 
     /**
     Identifier for the containing annotation set.
