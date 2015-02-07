@@ -13,7 +13,7 @@ model, although there is not necessarly a one-to-one mapping in Avro records
 to GFF3 records.
 
 The minimum requirement is to be able to accurately represent the current
-state of the art annotation data and the full SO model.  SeqAnnRegion is the
+state of the art annotation data and the full SO model.  Feature is the
 core generic record which corresponds to the a GFF3 record.
 */
 protocol SequenceAnnotations {
@@ -37,7 +37,7 @@ protocol SequenceAnnotations {
   /**
   Continuous numerical annotation along a region.
   */
-  record SeqAnnWiggle {
+  record Wiggle {
     /**
     The region being described
     Note that we are fusing parts of UCSC BedGraph and Wiggle syntax.
@@ -64,7 +64,7 @@ protocol SequenceAnnotations {
   /*
   A set of wiggle annotations
   */
-  record SeqAnnWiggleSet {
+  record WiggleSet {
     /** Id of this annotation node. */
     string id;
 
@@ -75,7 +75,7 @@ protocol SequenceAnnotations {
   /**
   Node in the annotation graph that annotates a contiguous region of 
   */
-  record SeqAnnRegion { // FIXME markd: could be SeqAnnFeature, which is consistent with current use
+  record Feature {
     /**
     Id of this annotation node.
     */
@@ -100,7 +100,7 @@ protocol SequenceAnnotations {
     Feature that is annotated by this region.  Normally, this will be a term in
     the Sequence Ontology.
     */
-    OntologyTerm feature; // TODO(calbach): Would prefer <something>Type. markd: featureType would be great 
+    OntologyTerm featureType;
 
     /**
     Name/value attributes of the annotation.  Attribute names follow the GFF3
@@ -117,7 +117,7 @@ protocol SequenceAnnotations {
   /*
   A set of region annotations
   */
-  record SeqAnnRegionSet {
+  record FeatureSet {
     /** The ID of this annotation set. */
     string id;
 
