@@ -28,6 +28,8 @@ record SearchSeqAnnRegionsRequest {
   */
   union { null, QueryRange } range = null;
 
+  // TODO: Fix this field. Clarify semantics around how OntologyTerm matching works, or
+  // change the Ontology term field on the feature.
   /**
   If specified, this query matches only annotations which match one of the
   provided feature types.
@@ -88,3 +90,5 @@ org.ga4gh.models.SeqAnnRegion getSeqAnnRegion(
   string id) throws GAException;
 
 }
+
+// TODO: AnnotationSet methods.
