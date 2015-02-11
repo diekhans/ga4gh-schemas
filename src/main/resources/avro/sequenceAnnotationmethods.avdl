@@ -2,92 +2,94 @@
 
 protocol SequenceAnnotationMethods {
 
-import idl "methods.avdl";
-import idl "sequenceAnnotations.avdl";
+  import idl "methods.avdl";
+  import idl "sequenceAnnotations.avdl";
 
-/******************  /seqAnnRegions/search  *********************/
-
-/**
-This request maps to the body of `POST /seqAnnRegions/search` as JSON.
-*/
-record SearchSeqAnnRegionsRequest {
-  /**
-  The annotation sets to search within. Either `seqAnnRegionSetIds` or
-  `parentIds` must be non-empty.
-  */
-  array<string> seqAnnRegionSetIds = [];
+  // FIXME: wiggle methods not defined.
+  
+  /******************  /features/search  *********************/
 
   /**
-  Restricts the search to direct children of the given parent `seqAnnRegion`
-  IDs. Either `seqAnnRegionSetIds` or `parentIds` must be non-empty.
+  This request maps to the body of `POST /features/search` as JSON.
   */
-  array<string> parentIds = [];
+  record SearchFeaturesRequest {
+    /**
+    The annotation sets to search within. Either `featureSetIds` or
+    `parentIds` must be non-empty.
+    */
+    array<string> featureSetIds = [];
+
+    /**
+    Restricts the search to direct children of the given parent `feature`
+    IDs. Either `featureSetIds` or `parentIds` must be non-empty.
+    */
+    array<string> parentIds = [];
+
+    /**
+    If specified, this query matches only annotations which overlap this range.
+    */
+    union { null, QueryRange } range = null;
+
+    // TODO: Fix this field. Clarify semantics around how OntologyTerm matching works, or
+    // change the Ontology term field on the feature.
+    /**
+    If specified, this query matches only annotations which match one of the
+    provided feature types.
+    */
+    array<org.ga4gh.models.OntologyTerm> features = [];
+
+    /**
+    Specifies the maximum number of results to return in a single page.
+    If unspecified, a system default will be used.
+    */
+    union { null, int } pageSize = null;
+
+    /**
+    The continuation token, which is used to page through large result sets.
+    To get the next page of results, set this parameter to the value of
+    `nextPageToken` from the previous response.
+    */
+    union { null, string } pageToken = null;
+  }
+
+  /** This is the response from `POST /features/search` expressed as JSON. */
+  record SearchFeaturesResponse {
+    /**
+    The list of matching annotations, sorted by start position. Annotations which
+    share a start position are returned in a deterministic order.
+    */
+    array<org.ga4gh.models.Feature> features = [];
+
+    /**
+    The continuation token, which is used to page through large result sets.
+    Provide this value in a subsequent request to return the next page of
+    results. This field will be empty if there aren't any additional results.
+    */
+    union { null, string } nextPageToken = null;
+  }
 
   /**
-  If specified, this query matches only annotations which overlap this range.
-  */
-  union { null, QueryRange } range = null;
+  Gets a list of `Feature` matching the search criteria.
 
-  // TODO: Fix this field. Clarify semantics around how OntologyTerm matching works, or
-  // change the Ontology term field on the feature.
+  `POST /features/search` must accept a JSON version of
+  `SearchFeaturesRequest` as the post body and will return a JSON version of
+  `SearchFeaturesResponse`.
+  */
+  SearchFeaturesResponse searchFeatures(
+    /** This request maps to the body of `POST /features/search` as JSON. */
+    SearchFeaturesRequest request) throws GAException;
+
+
+  /****************  /feature/{id}  *******************/
   /**
-  If specified, this query matches only annotations which match one of the
-  provided feature types.
+  Gets a `org.ga4gh.models.Feature` by ID.
+  `GET /feature/{id}` will return a JSON version of `Feature`.
   */
-  array<org.ga4gh.models.OntologyTerm> features = [];
-
-  /**
-  Specifies the maximum number of results to return in a single page.
-  If unspecified, a system default will be used.
-  */
-  union { null, int } pageSize = null;
-
-  /**
-  The continuation token, which is used to page through large result sets.
-  To get the next page of results, set this parameter to the value of
-  `nextPageToken` from the previous response.
-  */
-  union { null, string } pageToken = null;
-}
-
-/** This is the response from `POST /seqAnnRegions/search` expressed as JSON. */
-record SearchSeqAnnRegionsResponse {
-  /**
-  The list of matching annotations, sorted by start position. Annotations which
-  share a start position are returned in a deterministic order.
-  */
-  array<org.ga4gh.models.SeqAnnRegion> seqAnnRegions = [];
-
-  /**
-  The continuation token, which is used to page through large result sets.
-  Provide this value in a subsequent request to return the next page of
-  results. This field will be empty if there aren't any additional results.
-  */
-  union { null, string } nextPageToken = null;
-}
-
-/**
-Gets a list of `SeqAnnRegion` matching the search criteria.
-
-`POST /seqAnnRegions/search` must accept a JSON version of
-`SearchSeqAnnRegionsRequest` as the post body and will return a JSON version of
-`SearchSeqAnnRegionsResponse`.
-*/
-SearchSeqAnnRegionsResponse searchSeqAnnRegions(
-  /** This request maps to the body of `POST /seqAnnRegions/search` as JSON. */
-  SearchSeqAnnRegionsRequest request) throws GAException;
-
-
-/****************  /seqAnnRegion/{id}  *******************/
-/**
-Gets a `org.ga4gh.models.SeqAnnRegion` by ID.
-`GET /seqAnnRegion/{id}` will return a JSON version of `SeqAnnRegion`.
-*/
-org.ga4gh.models.SeqAnnRegion getSeqAnnRegion(
-  /**
-  The ID of the `SeqAnnRegion`.
-  */
-  string id) throws GAException;
+  org.ga4gh.models.Feature getFeature(
+    /**
+    The ID of the `Feature`.
+    */
+    string id) throws GAException;
 
 }
 
