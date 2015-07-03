@@ -1,10 +1,89 @@
 # GA4GH Wire Protocol Specification
 
-### Rational
-The GA4GH paging protocol offers a simple client interface that allows clients
-to read complete JSON documents 'off-the-wire' and also allows for the easy
-resumption of failed transfers.  However, during the course of implementing the
-protocol, we are recognizing its drawbacks:
+## Internet protocol
+
+GA4GH clients and servers communicate via streaming HTTP/HTTPS using chunked
+transfer encoding (rfc7230).  Data in the stream consists of variable length
+message encode in one of the formats defined in this document. The encoding is
+determined using HTTP content-type negotiation (rfc7231).
+
+The HTTP 1.1 chunked transfer encoding error report model is used to indicate
+failed transfers.  A connection that is closed without receiving a trailer
+chunk must be treated as an error.  When a trailer chunk is received, it must
+be interrogated to see if it contains a `Status` header that indicates an error.
+
+## Messaging
+
+Messages are used to implement the streaming protocol.  A message is not a
+GA4GH data object, it is a transfer facility with a predefined set of message.
+One type of the message is used to send GA4GH query and response data.  In
+response to a query, as stream of messages is sent as a single HTTP chunk
+transfer encoded response.  The protocol allows for a stream of mixed GA4GH
+object types.
+
+
+### Transfer resume
+The GA4GH streaming protocol supports resume of a stream by sending periodic
+checkpoint message that can be used to restart a transfer at that point. See
+the Rational section for discussion of this design decision.  To resume from a
+failure, the original query, along with a checkpoint token is sent to the
+server.  The transfer will resume at that checkpoint, with the first message
+being the checkpoint message.
+
+The frequency of checkpoint messages can be requested by the client using the
+`X-GA4GH-CHECKPOINT-FREQUENCY` request header.  This is an advisory request,
+The exact frequency of checkpoints is up to the discretion of the server.  The
+value is the number of approximate number of bytes of to stream before sending
+a checkpoint message.  The value is an integer with an optional
+case-insensitive suffix of K for kilobytes, M for megabytes, and G for
+gigabytes.  Specifying 0 disables checkpoints.
+
+The client tunes the checkpoint frequency based on network speed and
+reliability.  Since it's expected that that checkpoint will on be used for
+larger transfers over wide area networks, the default value is disabled (0),
+There is no requirement that clients implement checkpoint resume.
+
+
+### Message types
+
+The following message types are defined:
+- `dataType typeKey typeUri`: Defines a key used to identify the types of data
+  objects that follow in a stream.  This supports mixed GA4GH data types in
+  given stream. A message for a given types is only sent once, before any data
+  objects that type are sent.  They maybe sent at any point in the stream, the
+  only requirement is that a `dataType` message must precede the first message
+  of the type.  If a stream is resumed from a checkpoint, `dataType` objects
+  will be resent before objects of a given type are sent.  The`typeKey`
+  parameter is an integer that is included in the `dataObject` messages.  The
+  value is server-instance dependent and its scope is only the current data
+  stream.  If a request is resumed, it should not be assume that the same
+  `typeKey` values will be the same as the original stream.  The `typeUrl`
+  parameter is a URI that identifies the type.  This allows for extensions to
+  the GA4GH protocol.  The `typeUrl` should resolve to the protobuf `*.proto`
+  file for the type.
+
+- `dataObject typeKey data` - Used to send a data object.  The `typeKey`
+  parameter is used to find the matching `dataType` message.  The `data`
+  parameter is the data object.
+
+- `checkpoint checkpointObject` - Specify a checkpoint in the data stream.
+  The `checkpointObject` is an opaque, server-dependent object.  It should be
+  returned as-is when resuming a stream.
+
+# needs to work below here
+
+### Message Encoding
+
+- JSON text encoding
+
+- Protocal Buffers binary encoding
+
+
+## Rational
+The original GA4GH paging protocol offers a simple client interface that
+allows clients to read a complete JSON documents 'off-the-wire' and also
+allows for the easy resumption of failed transfers.  However, during the
+course of implementing the protocol, we are recognizing its drawbacks:
 
 - Paging is performance limiting due to the need to buffer
   the returned JSON document. It requires a tradeoff between
@@ -45,55 +124,34 @@ We would like to propose some options for streaming.  Some ideas:
   side code and will support future non-REST query languages that return
   complex results.
 
+  This
+approach is used over the more common paging mechanism due to the increased
+complexity in efficiently implementing paging with complex queries.  Resume is
+normally used in exceptional situations, such as network errors. The
+checkpoint approach allows the server to trade off slower performance for
+implementation efficiency.
+
 Adding an object type and checkpoint token to every object would greatly
 increase the overhead for small objects.  However these could only be sent as
 needed.  Either as a special object in the stream or by sending batches of
 objects.
 
-One possibility for such a streaming protocol would be to have a
-stream of messages of the form
 
-    <message type> <length> <message>
+#### todo:
+- chuncked and paging can still work, but makes both clientro an serve
+- data type as URL
+- define mime type
+- defining versioning
+- add line-oriented JSON to protobuf
+- GA4GH versioning (if not part of mime type, then allow extension).
+- message design on efficent change of many small messsages
+- negotation of checkpoint period
+- security and encryption
+-  This differs from common used paging protocol as it's goal is to
+- MIME types
+- define URLs
+- request streams
 
-Message type indicates the type of the message, not the type data. So we could
-have messages of types:
-
-    - D - data object
-    - C - checkpoint object
-    - T - data type object
-
-One possible example of this in use would be the following stream of messsages
-which are the results of a searchVariantSets query:
-
-    T 20 {"type":"VariantSet"}
-    D 61 {"id":"variantSet1", "metadata":{}, "referenceSetId":"grch38"}
-    D 61 {"id":"variantSet2", "metadata":{}, "referenceSetId":"grch38"}
-    D 63 {"id":"variantSet100", "metadata":{}, "referenceSetId":"grch38"}
-    C 37 {"checkpoint": "xsdfewsd234wsdfdsf23"}
-    D 63 {"id":"variantSet101", "metadata":{}, "referenceSetId":"grch38"}
-
-Clients read in the stream by taking the first two tokens (space delimited,
-say, for the sake of argument), and using these to understand the rest of the
-message. The first token is a character, telling the client how to interpret
-the message body. The second token is the number of bytes in the message
-encoded as (for the sake of argument) a base-10 ASCII string. The client then
-reads <length> bytes from the stream, interprets them, and moves on to the next
-message.
-
-The first message in this stream is a Type message, which lets the client know
-how to parse the incoming messages. This simplifies clients, because the stream
-parser no longer needs to know the context of the request to be able to parse
-the response.
-
-The following three messages are Data messages, which contain the payload we
-are interested in. These are shown in JSON here, but they could also be binary
-encoded. Because each message is preceded by its length, clients can
-efficiently buffer and process messages.
-
-The fourth message is a Checkpoint message. A checkpoint message is something
-that the server inserts into the stream at points where it can resume the
-stream in the case of an error condition.  If an error occurs, the client
-should be able to resume the transfer by providing the server with the
-checkpoint object.  (This example is very much a straw man; the details of this
-mechanism would need a lot of thought to do properly). Clients who are not
-interested in checkpointing simply ignore these messages.
+### References
+[rfc7231 -Hypertext Transfer Protocol (HTTP/1.1): Semantics and Content](http://tools.ietf.org/html/rfc7231)
+[rfc7230 - Hypertext Transfer Protocol (HTTP/1.1): Message Syntax and Routing](http://tools.ietf.org/html/rfc7230)
