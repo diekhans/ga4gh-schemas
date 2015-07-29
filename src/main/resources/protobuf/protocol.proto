@@ -1,0 +1,37 @@
+/**
+ * GA4GH wire messaging protocol.
+ */
+// TODO : copy documentation from spec when it's solid
+syntax = "proto3";
+
+package org.ga4gh.protocol;
+
+message DataType {
+  int32 type_key = 1;
+  string type_name = 2;
+}
+
+message DataObject {
+  int32 type_key = 1;
+  bytes data = 2;
+}
+
+message Checkpoint {
+  bytes memento = 1;
+}
+
+message Restart {
+  bytes memento = 1;
+}
+
+message Message {
+  oneof message_type {
+    DataType data_type = 1;
+    DataObject data_object = 2;
+    Checkpoint checkpoint = 3;
+    Restart restart = 4;
+  }
+}
+
+//https://github.com/ekg/stream/blob/master/stream.hpp
+//https://github.com/mafintosh/pbs

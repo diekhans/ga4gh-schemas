@@ -7,22 +7,35 @@ This document assumes that the GA4GH has switch from Avro to [Protocol Buffers
 V3](https://developers.google.com/protocol-buffers/docs/proto3).
 
 
-## Internet protocol GA4GH clients and servers communicate via streaming
-HTTP/HTTPS using chunked transfer encoding ([rfc7230 - Hypertext Transfer Protocol (HTTP/1.1): Message Syntax and Routing](http://tools.ietf.org/html/rfc7230)
-).
-Data in the stream
-consists of variable length message encode in one of the formats defined in
-this document. The encoding is determined using HTTP content-type negotiation
+## Internet protocol
+GA4GH clients and servers communicate via streaming HTTP/HTTPS using chunked
+transfer encoding
+([rfc7230 - Hypertext Transfer Protocol (HTTP/1.1): Message Syntax and Routing](http://tools.ietf.org/html/rfc7230)
+).  Data in the stream consists of variable length message encode in one of
+the formats defined in this document. The encoding is determined using HTTP
+content-type negotiation
 ([rfc7231 -Hypertext Transfer Protocol (HTTP/1.1): Semantics and Content](http://tools.ietf.org/html/rfc7231)).
-A response stream of messages is sent as an HTTP 1.1 chunked
-transfer encoding response.  A request stream maybe send using a HTTP 1.0 request,
-with content length or chunked transfer encoding.
+A response stream of messages is sent as an HTTP 1.1 chunked transfer encoding
+response.  A request stream maybe send using a HTTP 1.0 request, with content
+length or chunked transfer encoding.
 
 The HTTP 1.1 chunked transfer encoding error report model is used to indicate
 failed transfers.  A connection that is closed without receiving a trailer
 chunk must be treated as an error.  When a trailer chunk is received, it must
 be interrogated to see if it contains a `Status` header that indicates an
 error.
+
+MIME type is in the form `application/*encoding*+v*apiversion*`.  Were
+*encoding* is the encoding format described below.  The *apiversion* is the
+dot-separate hierarchal API version of the GA4GH API.  For requests, the
+`Accepts` header is used to specify the desired encoding and API version.  The
+API version hierarchy requested can be as specific as required, with omitted
+minor versions resulting in the newest version available on the server
+matching.  Thus a version of `1.5` can be satisfied with version such as
+`1.5`, or `1.5.3`, etc. The response `Content-Type` contains the exact version
+of the API that was return.
+
+>*FIXME: version matching is not adequate, need to be able to specify matching a version range in the dot hierarchy*
 
 ## Messaging
 Messages are used to implement the streaming protocol.  A message is not a
@@ -77,17 +90,17 @@ The following message types are defined:
   parameter is used to find the matching `dataType` message.  The `data`
   parameter is the data object.
 
-- `checkpoint checkpointObject` - Specify a checkpoint in the data stream.
-  The `checkpointObject` is an opaque, server-dependent object.  It should be
+- `checkpoint memento` - Specify a checkpoint in the data stream.
+  The `memento` is an opaque, server-dependent object.  It should be
   returned as-is when resuming a stream.
 
-- `resume checkpointObject` - Resume a transfer at the specified checkpoint in
-  the data stream.  The next data object that was or would have been received
-  after in the corresponding `checkpoint` message will be the next data object
-  received on the resume. It will be preceded by the required `dataType`
-  messages.  The same checkpoint may resumed multiple times, as would be
-  required if there was a failure before another `checkpoint` messages is
-  received in the stream.
+- `resume memento` - Resume a transfer at the specified checkpoint, as define
+  by the `memento` object, in data stream.  The next data object that was or
+  would have been received after in the corresponding `checkpoint` message
+  will be the next data object received on the resume. It will be preceded by
+  the required `dataType` message.  The same checkpoint may resumed multiple
+  times, as would be required if there was a failure before another
+  `checkpoint` messages is received in the stream.
 
 # NEEDS WORK BELOW HERE
 
@@ -95,7 +108,50 @@ The following message types are defined:
 ## Message Encoding
 Messages are encoded using
 [Protocol Buffers V3](https://developers.google.com/protocol-buffers/docs/proto3).
+Messages are encoded as `oneof` alternatives in a `Message` object.  The Protocol
+Buffers declarations for the GA4GA messages are:
 
+```
+    syntax = "proto3";
+
+    package org.ga4gh.protocol;
+
+    message DataType {
+      int32 type_key = 1;
+      string type_name = 2;
+    }
+
+    message DataObject {
+      int32 type_key = 1;
+      bytes data = 2;
+    }
+
+    message Checkpoint {
+      bytes memento = 1;
+    }
+
+    message Restart {
+      bytes memento = 1;
+    }
+
+    message Message {
+      oneof message_type {
+        DataType data_type = 1;
+        DataObject data_object = 2;
+        Checkpoint checkpoint = 3;
+        Restart restart = 4;
+      }
+    }
+```
+
+
+### ASCII message encode
+
+
+### Binary message encode
+application/x-protobuf
+
+**length
 
 - JSON text encoding
 
