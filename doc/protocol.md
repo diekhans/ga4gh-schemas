@@ -1,9 +1,9 @@
 # GA4GH Wire Protocol Specification
 Version 0.1 [draft]
 
-This document defines the GA4GH Internet protocol.
-
-This document assumes that the GA4GH has switch from Avro to [Protocol Buffers
+This document defines the GA4GH Internet protocol.  This provides a
+restartable streaming protocol with both ASCII and binary encoding.
+It is based on assumption that the GA4GH has switch from Avro to [Protocol Buffers
 V3](https://developers.google.com/protocol-buffers/docs/proto3).
 
 
@@ -25,7 +25,7 @@ chunk must be treated as an error.  When a trailer chunk is received, it must
 be interrogated to see if it contains a `Status` header that indicates an
 error.
 
-MIME type is in the form `application/*encoding*+v*apiversion*`.  Were
+MIME type is in the form `application/ga4gh.v*apiversion*.*encoding*`.  Were
 *encoding* is the encoding format described below.  The *apiversion* is the
 dot-separate hierarchal API version of the GA4GH API.  For requests, the
 `Accepts` header is used to specify the desired encoding and API version.  The
