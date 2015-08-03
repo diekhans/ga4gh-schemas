@@ -36,8 +36,8 @@ chunk must be treated as an error.  When a trailer chunk is received, it must
 be interrogated to see if it contains a `Status` header that indicates an
 error.
 
-MIME type is in the form `application/ga4gh.v`*apiversion*`+`*encoding*.  Where
-*encoding* is the encoding format described below.  The *apiversion* is the
+MIME type is in the form `application/ga4gh.v${apiversion}+${encoding}`.  Where
+`${encoding}` is the encoding format described below.  The `${apiversion}` is the
 dot-separate hierarchal API version of the GA4GH API.  For requests, the
 `Accepts` header is used to specify the desired encoding and API version.  The
 API version hierarchy requested can be as specific as required, with omitted
@@ -165,7 +165,7 @@ encode must follow it's specification.   Messages are written to
 the stream in [line-delimited JSON format]
 (https://en.wikipedia.org/wiki/JSON_Streaming#Line_delimited_JSON).
 
-The MIME type for JSON encode is `application/ga4gh.v`*apiversion*`+JSON`.
+The MIME type for JSON encode is `application/ga4gh.v${apiversion}+JSON`.
 
 ### Binary message encoding
 Message may be encoded in an efficient binary format using Protocol Buffers V3
@@ -173,7 +173,7 @@ binary encoding format.  Each message is preceded by a 32-bit byte length
 written in network byte order, followed by the message bytes.
 
 The MIME type for binary encode is
-`application/ga4gh.v`*apiversion*`+x-protobuf`.
+`application/ga4gh.v${apiversion}+x-protobuf`.
 
 ## Rational
 
