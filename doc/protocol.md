@@ -3,7 +3,7 @@ Version 0.1 [draft]
 
 This document defines the new GA4GH Internet protocol.  It provides a
 restartable, streaming protocol with both ASCII and binary encodings.
-It id designed to efficiently send a stream of small messages.
+It is designed to efficiently send a stream of small messages.
 This is based on assumption that the GA4GH has switch from Avro to
 [Protocol Buffers V3]
 (https://developers.google.com/protocol-buffers/docs/proto3).
@@ -28,7 +28,7 @@ content-type negotiation
 (http://tools.ietf.org/html/rfc7231)).
 A request maybe send using either either a single HTTP 1.0 message
 with content length or using HTTP 1.1 chunked transfer encoding.
-Responses must be sent using chuncked transfer encoding.
+Responses must be sent using chunked transfer encoding.
 
 The HTTP 1.1 chunked transfer encoding error report model is used to indicate
 failed transfers.  A connection that is closed without receiving a trailer
@@ -50,9 +50,9 @@ return.
 
 ## Messaging
 Messages are used to implement the streaming protocol.  A message is not a
-GA4GH data object, it is a transfer facility with a predefined set of message.
-One type of the message is used to send GA4GH query and response data.  In
-response to a query, as stream of messages is sent as a single HTTP chunk
+GA4GH data object, it is a transfer facility with a predefined set of messages.
+One type of  message is used to send GA4GH query and response data.  In
+response to a query, a stream of messages is sent as a single HTTP chunk
 transfer encoded response.  The protocol allows for a stream of mixed GA4GH
 object types.
 
@@ -60,15 +60,15 @@ Both request and response use the same set of messages.
 
 ### Transfer resume
 The GA4GH streaming protocol supports resume of a stream by sending periodic
-checkpoint message that can be used to restart a transfer at that point. See
-the Rational section for discussion of this design decision.  To resume from a
+checkpoint messages that can be used to restart a transfer at that point. See
+the Rationale section for discussion of this design decision.  To resume from a
 failure, a `resume` message, along with a checkpoint object is sent to the
 server. 
 
 The frequency of checkpoint messages can be requested by the client using the
-`X-GA4GH-CHECKPOINT-FREQUENCY` request header.  This is an advisory request,
-The exact frequency of checkpoints is up to the discretion of the server.  The
-value is the number of approximate number of bytes of to stream before sending
+`X-GA4GH-CHECKPOINT-FREQUENCY` request header.  This is an advisory request;
+the exact frequency of checkpoints is up to the discretion of the server.  The
+value is the approximate number of bytes to stream before sending
 a checkpoint message.  The value is an integer with an optional
 case-insensitive suffix of K for kilobytes, M for megabytes, and G for
 gigabytes.  Specifying 0 disables checkpoints.
@@ -86,8 +86,8 @@ from the client once a write API has been defined by GA4GH.
 The following message types are defined:
 - `dataType typeKey typeName`: Defines a key used to identify the types of
   data objects that follow in a stream.  This supports mixed GA4GH data types
-  in given stream. A message for a given types is only sent once, before any
-  data objects that type are sent.  They maybe sent at any point in the
+  in given stream. A message for a given type is only sent once, before any
+  data objects of that type are sent.  They may be sent at any point in the
   stream, the only requirement is that a `dataType` message must precede the
   first message of the type.  If a stream is resumed from a checkpoint,
   `dataType` objects will be resent before objects of a given type are sent.
@@ -110,8 +110,8 @@ The following message types are defined:
 
 - `resume memento` - Resume a transfer at the specified checkpoint, as define
   by the `memento` object, in data stream.  The next data object that was or
-  would have been received after in the corresponding `checkpoint` message
-  will be the next data object received on the resume. It will be preceded by
+  would have been received after  the corresponding `checkpoint` message
+  will be the next data object received on the stream. It will be preceded by
   the required `dataType` message.  The same checkpoint may resumed multiple
   times, as would be required if there was a failure before another
   `checkpoint` messages is received in the stream.
@@ -161,7 +161,7 @@ Buffers declarations for the GA4GA messages are:
 Messages are encoding as UTF-8 text following the standard defined by
 Protocol Buffers V3 JSON encoding.  While implementation
 are not required to use the Protocol Buffers software, the JSON
-encode must follow it's specification.   Messages are written to
+encode must follow its specification.   Messages are written to
 the stream in [line-delimited JSON format]
 (https://en.wikipedia.org/wiki/JSON_Streaming#Line_delimited_JSON).
 
@@ -175,12 +175,12 @@ written in network byte order, followed by the message bytes.
 The MIME type for binary encode is
 `application/ga4gh.v${apiversion}+x-protobuf`.
 
-## Rational
+## Rationale
 
-### Rational for a streaming protocol
+### Rationale for a streaming protocol
 The original GA4GH paging protocol offers a simple client interface that
-allows clients to read a complete JSON documents 'off-the-wire'.  The returns
-response objects that contained a homogeneous vector of results along with a
+allows clients to read a complete JSON documents 'off-the-wire'.  The returned
+response objects  contained a homogeneous vector of results along with a
 next page token.  This allowed for the easy resumption of failed transfers.
 However, during the implementing of the protocol, drawbacks have been
 recognized:
@@ -204,12 +204,12 @@ recognized:
   information in a single response.  Variant is the degenerate example, where it
   can contain thousands of calls.
 
-### Rational for mixed object type results streams
+### Rationale for mixed object type results streams
 
 While ReST APIs tend to return one of more objects of the same type, it may be
 desirable for a query language API to produce more complex result streams.  It
 was felt that the increased expressiveness and efficiency of query languages
-will make them important for GA4GH and an, single, flexibly response protocol
+will make them important for GA4GH and a single flexible response protocol
 should be use for all messages.
 
 One type specification design that was considered was to send a `dataType`
@@ -221,16 +221,16 @@ robustness advantage in `dataObject` messages having an inexpensive type
 identifier include in the message.
 
 
-### Checkpoint rational
+### Checkpoint rationale
 
 The primary goal paging is to allow for restarting large transfers on failure.
-With paging, the error recover is part of every transaction rather than handles
+With paging, the error recover is part of every transaction rather than handled
 as the exceptional case.  Clients and servers on a highly reliable local network,
 such as in a compute cloud, still pay the penalty of paging, although such
 failures will be rare.
 
 The implementation of paging required servers to be able to restart a query
-from any point.  The checkpoint approach allows to server implementation  more
+from any point.  The checkpoint approach allows  server implementations  more
 discretion in the granularity of the checkpoints, possibly simplifying the
 implementation.
 
