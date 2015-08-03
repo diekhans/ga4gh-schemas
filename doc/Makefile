@@ -6,4 +6,4 @@ protocol.pdf: protocol.md
 	open protocol.pdf
 
 savebak:
-	savebak -r ${hgwdev} protocol.md protocol.md .emacs.bak msg.proto
+	savebak -r ${hgwdev} protocol.md protocol.md .emacs.bak ../src/main/resources/protobuf

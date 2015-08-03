@@ -1,23 +1,34 @@
 # GA4GH Wire Protocol Specification
 Version 0.1 [draft]
 
-This document defines the GA4GH Internet protocol.  This provides a
-restartable streaming protocol with both ASCII and binary encoding.
-It is based on assumption that the GA4GH has switch from Avro to [Protocol Buffers
-V3](https://developers.google.com/protocol-buffers/docs/proto3).
+This document defines the new GA4GH Internet protocol.  It provides a
+restartable, streaming protocol with both ASCII and binary encodings.
+It id designed to efficiently send a stream of small messages.
+This is based on assumption that the GA4GH has switch from Avro to
+[Protocol Buffers V3]
+(https://developers.google.com/protocol-buffers/docs/proto3).
 
+The streaming protocol is intended to replace the current GA4GH paging
+protocol.
+
+This document is intended to be normative.  The protocol should be completely
+implementable based on this document and referenced standards.  Any undefined
+behavior or ambiguities discovered during any implementation must result in an
+update of this specification.
 
 ## Internet protocol
 GA4GH clients and servers communicate via streaming HTTP/HTTPS using chunked
 transfer encoding
-([rfc7230 - Hypertext Transfer Protocol (HTTP/1.1): Message Syntax and Routing](http://tools.ietf.org/html/rfc7230)
-).  Data in the stream consists of variable length message encode in one of
+([rfc7230 - Hypertext Transfer Protocol (HTTP/1.1): Message Syntax and Routing]
+(http://tools.ietf.org/html/rfc7230)).
+Data in the stream consists of variable length message encode in one of
 the formats defined in this document. The encoding is determined using HTTP
 content-type negotiation
-([rfc7231 -Hypertext Transfer Protocol (HTTP/1.1): Semantics and Content](http://tools.ietf.org/html/rfc7231)).
-A response stream of messages is sent as an HTTP 1.1 chunked transfer encoding
-response.  A request stream maybe send using a HTTP 1.0 request, with content
-length or chunked transfer encoding.
+([rfc7231 -Hypertext Transfer Protocol (HTTP/1.1): Semantics and Content]
+(http://tools.ietf.org/html/rfc7231)).
+A request maybe send using either either a single HTTP 1.0 message
+with content length or using HTTP 1.1 chunked transfer encoding.
+Responses must be sent using chuncked transfer encoding.
 
 The HTTP 1.1 chunked transfer encoding error report model is used to indicate
 failed transfers.  A connection that is closed without receiving a trailer
@@ -25,17 +36,17 @@ chunk must be treated as an error.  When a trailer chunk is received, it must
 be interrogated to see if it contains a `Status` header that indicates an
 error.
 
-MIME type is in the form `application/ga4gh.v*apiversion*.*encoding*`.  Were
+MIME type is in the form `application/ga4gh.v*apiversion*+*encoding*`.  Where
 *encoding* is the encoding format described below.  The *apiversion* is the
 dot-separate hierarchal API version of the GA4GH API.  For requests, the
 `Accepts` header is used to specify the desired encoding and API version.  The
 API version hierarchy requested can be as specific as required, with omitted
 minor versions resulting in the newest version available on the server
-matching.  Thus a version of `1.5` can be satisfied with version such as
-`1.5`, or `1.5.3`, etc. The response `Content-Type` contains the exact version
-of the API that was return.
+matching.  Thus, a version of `1.5` can be satisfied with version such as
+`1.5`, or `1.5.3`, etc.  The individual dot versions are compared as integers.
+The response `Content-Type` contains the exact version of the API that was
+return.
 
->*FIXME: version matching is not adequate, need to be able to specify matching a version range in the dot hierarchy*
 
 ## Messaging
 Messages are used to implement the streaming protocol.  A message is not a
@@ -45,6 +56,7 @@ response to a query, as stream of messages is sent as a single HTTP chunk
 transfer encoded response.  The protocol allows for a stream of mixed GA4GH
 object types.
 
+Both request and response use the same set of messages.
 
 ### Transfer resume
 The GA4GH streaming protocol supports resume of a stream by sending periodic
@@ -66,6 +78,8 @@ reliability.  Since it's expected that that checkpoint will on be used for
 larger transfers over wide area networks, the default value is disabled (0),
 There is no requirement that clients implement checkpoint resume.
 
+The same facility will be used for implementing checkpoints originating at
+from the client once a write API has been defined by GA4GH.
 
 ### Message types
 
@@ -101,9 +115,6 @@ The following message types are defined:
   the required `dataType` message.  The same checkpoint may resumed multiple
   times, as would be required if there was a failure before another
   `checkpoint` messages is received in the stream.
-
-# NEEDS WORK BELOW HERE
-
 
 ## Message Encoding
 Messages are encoded using
@@ -145,81 +156,55 @@ Buffers declarations for the GA4GA messages are:
 ```
 
 
-### ASCII message encode
+### JSON ASCII message encoding
 
+Messages are encoding as UTF-8 text following the standard defined by
+Protocol Buffers V3 JSON encoding.  While implementation
+are not required to use the Protocol Buffers software, the JSON
+encode must follow it's specification.   Messages are written to
+the stream in [line-delimited JSON format]
+(https://en.wikipedia.org/wiki/JSON_Streaming#Line_delimited_JSON).
 
-### Binary message encode
-application/x-protobuf
+The MIME type for JSON encode is `application/ga4gh.v*apiversion*+JSON`.
 
-**length
+### Binary message encoding
+Message may be encoded in an efficient binary format using Protocol Buffers V3
+binary encoding format.  Each message is preceded by a 32-bit byte length
+written in network byte order, followed by the message bytes.
 
-- JSON text encoding
-
-- Protocal Buffers binary encoding
-
+The MIME type for binary encode is
+`application/ga4gh.v*apiversion*+x-protobuf`.
 
 ## Rational
 
-
+### Rational for a streaming protocol
 The original GA4GH paging protocol offers a simple client interface that
 allows clients to read a complete JSON documents 'off-the-wire'.  The returns
 response objects that contained a homogeneous vector of results along with a
 next page token.  This allowed for the easy resumption of failed transfers.
-However, during the course of implementing the protocol, we are recognizing
-its drawbacks:
+However, during the implementing of the protocol, drawbacks have been
+recognized:
 
-- Paging in was performance limiting due to the need to buffer the returned
+- Paging introduces latency, as the client must get a complete response and
+  parse the document before it can issue the request for the next page. Large
+  pages make for poor interactive responsiveness, and small pages lead to a high
+  protocol overhead.
+- Paging was performance limiting due to the need to buffer the returned
   JSON document. It requires a tradeoff between client/server memory and the
   number of requests.  Even if a given client can dedicate a lot of memory for
   a transfer, the server must impose limits to prevent DoS attacks and manage
-  an unpredictable request load.  This could have been addressed by using a
-  chuncked HTTP response, allowing for a much larger page side.
-- Paging introduces problematic latency issues, as the client must get a
-  complete response and parse the document before it can issue the request for
-  the next page. Large pages make for poor interactive responsiveness, and
-  small pages lead to a high protocol overhead.
-- Paging makes the implementation of a server complex.  Since it
-  must be able to efficiently resume every query.
+  an unpredictable request load.
+- Paging makes the implementation of a server complex.  This is due it must be
+  able to efficiently resume every query at an arbitrary point determined by the
+  client.
+- Fixed return structures limit the flexibility of queries.  New result
+  structures must be defined for every new query.
+- Result structures limited to a single returned object type influence the data
+  model.  We end up with more complex, larger objects to include more
+  information in a single response.  Variant is the degenerate example, where it
+  can contain thousands of calls.
 
-- Fixed return structures limit the flexibility of queries.
-  New result structures must be defined for every new query.
-- Result structures limited to a single returned object type
-  influence the data model.  We end up with more complex,
-  larger objects to include more information in a single
-  response.  Variant is the degenerate example, were it can
-  contain thousands of calls.
-
-We would like to propose some options for streaming.  Some ideas:
-- Streaming protocol that can user either binary or JSON
-  encoding. The encoding is chosen by the client using the HTTP
-  Accept header. Servers must support JSON output, and may
-  optionally support the binary encoding.
-- Build on top of HTTP 1.1 chunked transefer encoding, allowing for
-  streaming to the client with reliable error reporting.
-  This also supports keep-alive streams, allowing the same
-  stream to be reused for subsequent queries.
-- To facilitate resumption of failed transfers, 'checkpoints'
-  can be included in the stream. This differs from paging in that
-  it's only used in error cases, so resuming a transfer from a
-  checkpoint does not have to be efficient.  Unlike paging, clients that
-  do not need to implement checkpoints can ignore them.
-- Include object type information in the stream.  This will simplify client
-  side code and will support future non-REST query languages that return
-  complex results.
-
-  This
-approach is used over the more common paging mechanism due to the increased
-complexity in efficiently implementing paging with complex queries.  Resume is
-normally used in exceptional situations, such as network errors. The
-checkpoint approach allows the server to trade off slower performance for
-implementation efficiency.
-
-Adding an object type and checkpoint token to every object would greatly
-increase the overhead for small objects.  However these could only be sent as
-needed.  Either as a special object in the stream or by sending batches of
-objects.
-
-### Mixed object type results streams rational
+### Rational for mixed object type results streams
 
 While ReST APIs tend to return one of more objects of the same type, it may be
 desirable for a query language API to produce more complex result streams.  It
@@ -238,34 +223,17 @@ identifier include in the message.
 
 ### Checkpoint rational
 
-The original query is resent when resuming, along with the checkpoint token,
-to provide maximum flexibility for the server developer on how to implement
-resuming.  TODO: It's debatable if this is worth the complexity to client
-implementation.  The server could encode the query in the checkpoint object.
+The primary gaol paging is to allow for restarting large transfers on failure.
+With paging, the error recover is part of every transaction rather than handles
+as the exceptional case.  Clients and servers on a highly reliable local network,
+such as in a compute cloud, still pay the penalty of paging, although such
+failures will be rare.
 
-The checkpoint message is resent at the beginning of the resumed stream to
-simplify the implementation of the client.  This avoids the client needing a
-part to pass the checkpoint token into the resumed stream.  TODO: However,
-if the resume stream fails before the resent checkpoint message is received,
-the checkpoint token is needed.  Drop this and document the necessary to
-preserved the object and that it's must be good for the resumed stream.
+The implementation of paging required servers to be able to restart a query
+from any point.  The checkpoint approach allows to server implementation  more
+discretion in the granularity of the checkpoints, possibly simplifying the
+implementation.
 
-
-#### todo:
-- chuncked and paging can still work, but makes both clientro an serve
-- define mime type
-- defining versioning
-- add line-oriented JSON to protobuf
-- GA4GH versioning (if not part of mime type, then allow extension).
-- message design on efficent change of many small messsages
-- negotation of checkpoint period
-- security and encryption
--  This differs from common used paging protocol as it's goal is to
-- MIME types
-- request streams
-- How to send back resume object?  Depend of in original query is required.
-- response version header?  no, it's in in content type (specify this)
-- raw json
 
 ### References
 - [rfc7230 - Hypertext Transfer Protocol (HTTP/1.1): Message Syntax and Routing](http://tools.ietf.org/html/rfc7230)
