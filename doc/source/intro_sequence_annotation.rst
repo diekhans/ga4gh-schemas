@@ -1,3 +1,27 @@
+.. _sequence_annotation
+
+****************************
+GA4GH Sequence Annotation
+****************************
+For the Sequence Annotation schema definitions, see `Sequence Annotation schema <schemas/sequenceAnnotations.html>`_
+
+
+------------------------
+Feature Based Hierarchy
+------------------------
+The central object of the GA4GH Sequence Annotation API is a Feature.  The Feature describes an interval of interest on some reference(s).  It has a span from a start position to a stop position as well as descriptive data.  A Feature has one or more parent Features which enables the construction of more complex representations in a hierarchical way.
+
+For example, a top level Feature may be a single Gene.  The different transcripts would have the gene Feature as parent.  Similarly, the specific exons for each transcript would have both gene and transcript as parent.  This structure can also exend to annotating CDS, binding sites or any other sub-gene level features.
+
+This model is very similar to that used by `GFF3`_.
+
+.. _GFF3: http://sequenceontology.org/resources/gff3.html
+
+---------------------------
+The Sequence Annotation Schema
+---------------------------
+TODO: insert an example annotation translation from GFF3 to GA4GH
+
 ---------------------------------------
 Annotation Design - RNA Considerations
 ---------------------------------------
